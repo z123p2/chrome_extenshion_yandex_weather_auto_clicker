@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 340px;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 13px;
+      color: #222;
+      background: #fff;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .header h1 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .icon { font-size: 20px; }
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding: 8px 12px;
+      background: #f5f5f5;
+      border-radius: 8px;
+    }
+    .toggle-row label { font-weight: 500; font-size: 14px; }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 22px;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: #ccc;
+      border-radius: 22px;
+      transition: .2s;
+    }
+    .slider:before {
+      content: "";
+      position: absolute;
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: .2s;
+    }
+    .switch input:checked + .slider { background: #4caf50; }
+    .switch input:checked + .slider:before { transform: translateX(18px); }
+    .field-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .field-group label { white-space: nowrap; min-width: 130px; }
+    .field-group input[type="number"],
+    .field-group input[type="text"] {
+      flex: 1;
+      padding: 5px 8px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 13px;
+      width: 60px;
+    }
+    .field-group input[type="text"] { width: auto; }
+    .field-group .unit { color: #888; font-size: 12px; white-space: nowrap; }
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .checkbox-row input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+    .checkbox-row label { cursor: pointer; user-select: none; }
+    .divider { border: none; border-top: 1px solid #eee; margin: 12px 0; }
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #666;
+    }
+    .status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 4px;
+    }
+    .status-dot.active { background: #4caf50; }
+    .status-dot.inactive { background: #ccc; }
+    .test-btn {
+      width: 100%;
+      padding: 8px;
+      margin-top: 10px;
+      background: #4a90d9;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .test-btn:hover { background: #357abd; }
+    .test-btn:active { background: #2a5f9e; }
+    .test-btn:disabled { background: #ccc; cursor: not-allowed; }
+    .note {
+      font-size: 11px;
+      color: #999;
+      margin-top: 12px;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <span class="icon">☀</span>
+    <h1>Яндекс Погода Автокликер зонтиков</h1>
+  </div>
+
+  <div class="toggle-row">
+    <label>Автоматизация</label>
+    <label class="switch">
+      <input type="checkbox" id="enabled">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="checkbox-row">
+    <input type="checkbox" id="autoStart">
+    <label for="autoStart">Автостарт при запуске браузера</label>
+  </div>
+  <div class="checkbox-row">
+    <input type="checkbox" id="autoOpenPage">
+    <label for="autoOpenPage">Автооткрытие страницы (если вкладка закрыта)</label>
+  </div>
+
+  <hr class="divider">
+
+  <div class="field-group">
+    <label for="intervalMinutes">Интервал:</label>
+    <input type="number" id="intervalMinutes" min="1" step="1">
+    <span class="unit">мин</span>
+  </div>
+  <div class="field-group">
+    <label for="delayMin">Случайная задержка от:</label>
+    <input type="number" id="delayMin" min="0" step="1">
+    <span class="unit">до</span>
+    <input type="number" id="delayMax" min="0" step="1">
+    <span class="unit">сек</span>
+  </div>
+  <div class="field-group">
+    <label for="targetUrl">URL страницы:</label>
+    <input type="text" id="targetUrl">
+  </div>
+
+  <hr class="divider">
+
+  <div class="status-row">
+    <span>
+      <span class="status-dot inactive" id="statusDot"></span>
+      <span id="statusText">Неактивно</span>
+    </span>
+    <span>Последний клик: <span id="lastClick">--:--:--</span></span>
+  </div>
+
+  <button id="testBtn" class="test-btn">▶ Проверить сейчас</button>
+
+  <div class="note">
+    Ищет открытую вкладку с Яндекс Погодой и нажимает «Нет».
+    Если вкладки нет и включено автооткрытие - открывает фоновую вкладку, кликает и закрывает.
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

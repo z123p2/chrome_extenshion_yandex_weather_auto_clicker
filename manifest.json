@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Яндекс Погода Автокликер зонтиков",
+  "version": "1.0.0",
+  "description": "Автоматически нажимает «Нет» на форме погодного отчета Яндекс Погоды",
+  "permissions": [
+    "alarms",
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://yandex.ru/pogoda/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://yandex.ru/pogoda/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Яндекс Погода Автокликер зонтиков"
+  }
+}

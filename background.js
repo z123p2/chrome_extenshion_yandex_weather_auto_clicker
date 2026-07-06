@@ -56,6 +56,8 @@ async function handleAutoClick() {
 
   if (tabs.length === 0 && config.autoOpenPage) {
     try {
+      const [originalTab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+
       const tab = await chrome.tabs.create({ url: config.targetUrl, active: false });
       try {
         await waitForTabLoad(tab.id, 30000);
@@ -64,6 +66,11 @@ async function handleAutoClick() {
       const response = await chrome.tabs.sendMessage(tab.id, { action: "click" }).catch(() => null);
       if (response && response.success) {
         await chrome.storage.local.set({ lastClickTime: Date.now() });
+
+        if (originalTab?.windowId) {
+          await chrome.windows.update(originalTab.windowId, { focused: true });
+        }
+
         await delay(500);
         await chrome.tabs.remove(tab.id);
       }

@@ -19,8 +19,12 @@ function loadConfig() {
   });
 }
 
-function scheduleNext() {
+function scheduleNext(fallbackMinutes) {
   chrome.alarms.clear("autoClick");
+  if (fallbackMinutes !== undefined) {
+    chrome.alarms.create("autoClick", { delayInMinutes: fallbackMinutes });
+    return;
+  }
   const randomExtra = Math.random() * (config.delayMax - config.delayMin) + config.delayMin;
   const totalMinutes = config.intervalMinutes + randomExtra / 60;
   chrome.alarms.create("autoClick", { delayInMinutes: totalMinutes });
@@ -45,14 +49,14 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === "autoClick") {
-    scheduleNext();
-    handleAutoClick().catch(() => {});
+    handleAutoClick().catch(() => scheduleNext(3));
   }
 });
 
 async function handleAutoClick() {
   const urlPattern = "https://yandex.ru/pogoda/*";
   let tabs = await chrome.tabs.query({ url: urlPattern });
+  let clicked = false;
 
   if (tabs.length === 0 && config.autoOpenPage) {
     try {
@@ -81,6 +85,7 @@ async function handleAutoClick() {
 
       if (response && response.success) {
         await chrome.storage.local.set({ lastClickTime: Date.now() });
+        clicked = true;
       }
 
       if (originalTab?.windowId) {
@@ -100,10 +105,17 @@ async function handleAutoClick() {
         const response = await chrome.tabs.sendMessage(tab.id, { action: "click" }).catch(() => null);
         if (response && response.success) {
           await chrome.storage.local.set({ lastClickTime: Date.now() });
+          clicked = true;
           break;
         }
       } catch {}
     }
+  }
+
+  if (clicked) {
+    scheduleNext();
+  } else {
+    scheduleNext(3);
   }
 }
 

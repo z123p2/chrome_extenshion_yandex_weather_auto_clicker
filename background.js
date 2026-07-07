@@ -93,9 +93,7 @@ async function handleAutoClick() {
       if (originalTab?.windowId) {
         await chrome.windows.update(originalTab.windowId, { focused: true });
       }
-    } catch (e) {
-      console.error("handleAutoClick error:", e);
-    }
+    } catch {}
   } else if (tabs.length > 0) {
     for (const tab of tabs) {
       try {

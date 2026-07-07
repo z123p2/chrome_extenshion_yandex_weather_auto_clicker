@@ -2,7 +2,7 @@ const DEFAULT_CONFIG = {
   enabled: false,
   autoStart: false,
   autoOpenPage: true,
-  targetUrl: "https://yandex.ru/pogoda/ru/maps/nowcast?lon=50.3859&lat=-46.4021&ll=50.3859_-46.4021&z=15",
+  targetUrl: "https://yandex.ru/pogoda/ru/maps/nowcast?lon=60.493&lat=10.2554&ll=60.493_10.2554&z=5",
   intervalMinutes: 10,
   delayMin: 30,
   delayMax: 60,
@@ -46,7 +46,7 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === "autoClick") {
     scheduleNext();
-    handleAutoClick();
+    handleAutoClick().catch(() => {});
   }
 });
 
@@ -58,23 +58,44 @@ async function handleAutoClick() {
     try {
       const [originalTab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
 
-      const tab = await chrome.tabs.create({ url: config.targetUrl, active: false });
+      const win = await chrome.windows.create({
+        url: config.targetUrl,
+        type: "popup",
+        focused: false,
+        width: 400,
+        height: 300,
+        left: -10000,
+        top: -10000,
+      });
+
+      if (originalTab?.windowId) {
+        await chrome.windows.update(originalTab.windowId, { focused: true });
+      }
+
+      const tabId = win.tabs[0].id;
       try {
-        await waitForTabLoad(tab.id, 30000);
+        await waitForTabLoad(tabId, 30000);
       } catch {}
       await delay(3000);
-      const response = await chrome.tabs.sendMessage(tab.id, { action: "click" }).catch(() => null);
+      const response = await chrome.tabs.sendMessage(tabId, { action: "click" }).catch(() => null);
+
       if (response && response.success) {
         await chrome.storage.local.set({ lastClickTime: Date.now() });
-
-        if (originalTab?.windowId) {
-          await chrome.windows.update(originalTab.windowId, { focused: true });
-        }
-
-        await delay(500);
-        await chrome.tabs.remove(tab.id);
       }
-    } catch {}
+
+      if (originalTab?.windowId) {
+        await chrome.windows.update(originalTab.windowId, { focused: true });
+      }
+
+      await delay(500);
+      await chrome.windows.remove(win.id);
+
+      if (originalTab?.windowId) {
+        await chrome.windows.update(originalTab.windowId, { focused: true });
+      }
+    } catch (e) {
+      console.error("handleAutoClick error:", e);
+    }
   } else if (tabs.length > 0) {
     for (const tab of tabs) {
       try {
@@ -123,7 +144,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse({ success: true });
   }
   if (message.action === "testClick") {
-    handleAutoClick().then(() => sendResponse({ success: true }));
+    handleAutoClick()
+      .then(() => sendResponse({ success: true }))
+      .catch(() => sendResponse({ success: false }));
     return true;
   }
   if (message.action === "getStatus") {

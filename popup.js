@@ -2,7 +2,7 @@ const DEFAULT_CONFIG = {
   enabled: false,
   autoStart: false,
   autoOpenPage: true,
-  targetUrl: "https://yandex.ru/pogoda/ru/maps/nowcast?lon=50.3859&lat=-46.4021&ll=50.3859_-46.4021&z=15",
+  targetUrl: "https://yandex.ru/pogoda/ru/maps/nowcast?lon=60.493&lat=10.2554&ll=60.493_10.2554&z=5",
   intervalMinutes: 10,
   delayMin: 30,
   delayMax: 60,

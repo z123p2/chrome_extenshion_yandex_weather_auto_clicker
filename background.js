@@ -9,6 +9,7 @@ const DEFAULT_CONFIG = {
 };
 
 let config = { ...DEFAULT_CONFIG };
+let hiddenTabId = null;
 
 function loadConfig() {
   chrome.storage.sync.get(DEFAULT_CONFIG, (stored) => {
@@ -54,6 +55,25 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   }
 });
 
+async function ensureHiddenTab() {
+  if (hiddenTabId) {
+    try {
+      await chrome.tabs.get(hiddenTabId);
+      return hiddenTabId;
+    } catch {
+      hiddenTabId = null;
+    }
+  }
+
+  const tab = await chrome.tabs.create({
+    url: "about:blank",
+    active: false,
+    pinned: true,
+  });
+  hiddenTabId = tab.id;
+  return hiddenTabId;
+}
+
 async function handleAutoClick() {
   const urlPattern = "https://yandex.ru/pogoda/*";
   let tabs = await chrome.tabs.query({ url: urlPattern });
@@ -61,18 +81,11 @@ async function handleAutoClick() {
 
   if (tabs.length === 0 && config.autoOpenPage) {
     try {
-      const [originalTab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+      const tabId = await ensureHiddenTab();
+      if (!tabId) return;
 
-      const win = await chrome.windows.create({
-        url: config.targetUrl,
-        state: "minimized",
-      });
+      await chrome.tabs.update(tabId, { url: config.targetUrl, active: false });
 
-      if (originalTab?.windowId) {
-        await chrome.windows.update(originalTab.windowId, { focused: true });
-      }
-
-      const tabId = win.tabs[0].id;
       try {
         await waitForTabLoad(tabId, 30000);
       } catch {}
@@ -84,16 +97,8 @@ async function handleAutoClick() {
         clicked = true;
       }
 
-      if (originalTab?.windowId) {
-        await chrome.windows.update(originalTab.windowId, { focused: true });
-      }
-
       await delay(500);
-      await chrome.windows.remove(win.id);
-
-      if (originalTab?.windowId) {
-        await chrome.windows.update(originalTab.windowId, { focused: true });
-      }
+      await chrome.tabs.discard(tabId);
     } catch {}
   } else if (tabs.length > 0) {
     for (const tab of tabs) {

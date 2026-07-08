@@ -149,6 +149,28 @@
       margin-top: 12px;
       line-height: 1.4;
     }
+
+    @media (prefers-color-scheme: dark) {
+      body { color: #ddd; background: #1e1e1e; }
+      .toggle-row { background: #2a2a2a; }
+      .slider { background: #555; }
+      .slider:before { background: #ccc; }
+      .field-group input[type="number"],
+      .field-group input[type="text"] {
+        background: #2a2a2a; border-color: #444; color: #ddd;
+      }
+      .field-group .unit { color: #888; }
+      .checkbox-row label { color: #ccc; }
+      .divider { border-top-color: #333; }
+      .status-row { color: #999; }
+      .status-dot.inactive { background: #555; }
+      .btn-secondary { background: #333; color: #bbb; }
+      .btn-secondary:hover { background: #444; }
+      .log-area { background: #252525; border-color: #333; color: #bbb; }
+      .log-time { color: #666; }
+      .log-error { color: #e55; }
+      .note { color: #666; }
+    }
     .row { margin-top: 8px; }
   </style>
 </head>

@@ -224,6 +224,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
     return true;
   }
+  if (message.action === "clearLogs") {
+    chrome.storage.local.set({ logs: [] });
+    sendResponse({ success: true });
+  }
 });
 
 loadConfig();

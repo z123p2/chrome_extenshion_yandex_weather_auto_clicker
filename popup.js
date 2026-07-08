@@ -113,8 +113,10 @@ $("testBtn").addEventListener("click", () => {
 
 $("logBtn").addEventListener("click", () => {
   const area = $("logArea");
+  const actions = $("logActions");
   if (area.classList.contains("open")) {
     area.classList.remove("open");
+    actions.style.display = "none";
     $("logBtn").textContent = "📋 Логи";
     return;
   }
@@ -124,6 +126,7 @@ $("logBtn").addEventListener("click", () => {
       area.textContent = "Логов нет";
       area.classList.add("open");
       $("logBtn").textContent = "✕ Закрыть";
+      actions.style.display = "flex";
       return;
     }
     const lines = logs.map(l => {
@@ -134,6 +137,20 @@ $("logBtn").addEventListener("click", () => {
     area.innerHTML = lines;
     area.classList.add("open");
     $("logBtn").textContent = "✕ Закрыть";
+    actions.style.display = "flex";
     area.scrollTop = area.scrollHeight;
+  });
+});
+
+$("copyLogsBtn").addEventListener("click", () => {
+  const text = $("logArea").textContent;
+  if (text && text !== "Логов нет") {
+    navigator.clipboard.writeText(text);
+  }
+});
+
+$("clearLogsBtn").addEventListener("click", () => {
+  chrome.runtime.sendMessage({ action: "clearLogs" }, () => {
+    $("logArea").textContent = "Логов нет";
   });
 });

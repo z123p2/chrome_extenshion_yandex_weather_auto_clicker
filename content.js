@@ -28,11 +28,5 @@ function waitForButton(sendResponse) {
 }
 
 function findButton() {
-  const primary = document.querySelector('button[data-val="wrong"]');
-  if (primary) return primary;
-
-  const buttons = document.querySelectorAll("button");
-  return Array.from(buttons).find(
-    (b) => b.textContent.trim() === "Нет"
-  );
+  return document.querySelector('button[data-val="wrong"]');
 }

@@ -103,27 +103,53 @@
     }
     .status-dot.active { background: #4caf50; }
     .status-dot.inactive { background: #ccc; }
-    .test-btn {
+    .btn {
       width: 100%;
       padding: 8px;
-      margin-top: 10px;
-      background: #4a90d9;
-      color: #fff;
       border: none;
       border-radius: 6px;
       font-size: 13px;
       cursor: pointer;
       transition: background .15s;
     }
-    .test-btn:hover { background: #357abd; }
-    .test-btn:active { background: #2a5f9e; }
-    .test-btn:disabled { background: #ccc; cursor: not-allowed; }
+    .btn-primary {
+      margin-top: 10px;
+      background: #4a90d9;
+      color: #fff;
+    }
+    .btn-primary:hover { background: #357abd; }
+    .btn-primary:active { background: #2a5f9e; }
+    .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+    .btn-secondary {
+      background: #e8e8e8;
+      color: #555;
+    }
+    .btn-secondary:hover { background: #ddd; }
+    .log-area {
+      display: none;
+      max-height: 200px;
+      overflow-y: auto;
+      margin-top: 8px;
+      padding: 6px;
+      background: #f9f9f9;
+      border: 1px solid #eee;
+      border-radius: 5px;
+      font-size: 11px;
+      font-family: monospace;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .log-area.open { display: block; }
+    .log-time { color: #888; }
+    .log-error { color: #c33; }
     .note {
       font-size: 11px;
       color: #999;
       margin-top: 12px;
       line-height: 1.4;
     }
+    .row { margin-top: 8px; }
   </style>
 </head>
 <body>
@@ -178,11 +204,15 @@
     <span>Последний клик: <span id="lastClick">--:--:--</span></span>
   </div>
 
-  <button id="testBtn" class="test-btn">▶ Проверить сейчас</button>
+  <button id="testBtn" class="btn btn-primary">▶ Проверить сейчас</button>
+
+  <div class="row">
+    <button id="logBtn" class="btn btn-secondary">📋 Логи</button>
+    <div id="logArea" class="log-area"></div>
+  </div>
 
   <div class="note">
-    Ищет открытую вкладку с Яндекс Погодой и нажимает «Нет».
-    Если вкладки нет и включено автооткрытие - открывает фоновую вкладку, кликает и закрывает.
+    Расширение нажимает «Нет» на форме погодного отчета Яндекс Погоды.
   </div>
 
   <script src="popup.js"></script>

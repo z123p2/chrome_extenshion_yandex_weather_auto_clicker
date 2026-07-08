@@ -110,3 +110,30 @@ $("testBtn").addEventListener("click", () => {
     }, 1000);
   });
 });
+
+$("logBtn").addEventListener("click", () => {
+  const area = $("logArea");
+  if (area.classList.contains("open")) {
+    area.classList.remove("open");
+    $("logBtn").textContent = "📋 Логи";
+    return;
+  }
+  area.textContent = "Загрузка...";
+  chrome.runtime.sendMessage({ action: "getLogs" }, (logs) => {
+    if (!logs || logs.length === 0) {
+      area.textContent = "Логов нет";
+      area.classList.add("open");
+      $("logBtn").textContent = "✕ Закрыть";
+      return;
+    }
+    const lines = logs.map(l => {
+      const t = new Date(l.ts).toLocaleTimeString("ru-RU");
+      const cls = l.msg.includes("FAILED") || l.msg.includes("error") || l.msg.includes("Error") ? "log-error" : "";
+      return cls ? `<span class="log-time">[${t}]</span> <span class="${cls}">${l.msg}</span>` : `<span class="log-time">[${t}]</span> ${l.msg}`;
+    }).join("\n");
+    area.innerHTML = lines;
+    area.classList.add("open");
+    $("logBtn").textContent = "✕ Закрыть";
+    area.scrollTop = area.scrollHeight;
+  });
+});

@@ -98,7 +98,7 @@ async function handleAutoClick() {
       }
 
       await delay(500);
-      await chrome.tabs.discard(tabId);
+      await chrome.tabs.update(tabId, { url: "about:blank", active: false });
     } catch {}
   } else if (tabs.length > 0) {
     for (const tab of tabs) {

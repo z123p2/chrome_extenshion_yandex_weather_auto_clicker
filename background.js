@@ -6,12 +6,14 @@ const DEFAULT_CONFIG = {
   intervalMinutes: 11,
   delayMin: 3,
   delayMax: 10,
+  loggingEnabled: true,
 };
 
 let config = { ...DEFAULT_CONFIG };
 let hiddenTabId = null;
 
 function log(msg) {
+  if (!config.loggingEnabled) return;
   const ts = new Date().toLocaleTimeString("ru-RU");
   console.log(`[${ts}] ${msg}`);
   chrome.storage.local.get("logs", (data) => {

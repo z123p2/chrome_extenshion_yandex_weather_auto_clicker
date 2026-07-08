@@ -6,6 +6,7 @@ const DEFAULT_CONFIG = {
   intervalMinutes: 11,
   delayMin: 3,
   delayMax: 10,
+  loggingEnabled: true,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -50,6 +51,7 @@ function readForm() {
     intervalMinutes: parseInt($("intervalMinutes").value) || 10,
     delayMin: parseInt($("delayMin").value) || 30,
     delayMax: parseInt($("delayMax").value) || 60,
+    loggingEnabled: $("loggingEnabled").checked,
   };
 }
 
@@ -61,6 +63,7 @@ function writeForm(config) {
   $("intervalMinutes").value = config.intervalMinutes;
   $("delayMin").value = config.delayMin;
   $("delayMax").value = config.delayMax;
+  $("loggingEnabled").checked = config.loggingEnabled;
 }
 
 function updateStatus(status) {
@@ -126,6 +129,11 @@ $("intervalMinutes").addEventListener("input", debouncedUpdate);
 $("delayMin").addEventListener("input", debouncedUpdate);
 $("delayMax").addEventListener("input", debouncedUpdate);
 $("targetUrl").addEventListener("change", () => {
+  const config = readForm();
+  sendUpdate(config);
+});
+
+$("loggingEnabled").addEventListener("change", () => {
   const config = readForm();
   sendUpdate(config);
 });

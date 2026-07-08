@@ -49,7 +49,8 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === "autoClick") {
-    handleAutoClick().catch(() => scheduleNext(3));
+    scheduleNext();
+    handleAutoClick().catch(() => {});
   }
 });
 
@@ -64,12 +65,7 @@ async function handleAutoClick() {
 
       const win = await chrome.windows.create({
         url: config.targetUrl,
-        type: "popup",
-        focused: false,
-        width: 400,
-        height: 300,
-        left: -10000,
-        top: -10000,
+        state: "minimized",
       });
 
       if (originalTab?.windowId) {

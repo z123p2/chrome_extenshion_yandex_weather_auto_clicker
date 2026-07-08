@@ -65,6 +65,13 @@ async function ensureHiddenTab() {
     }
   }
 
+  const tabs = await chrome.tabs.query({ pinned: true, url: "about:blank" });
+  const existing = tabs.find(t => !t.active);
+  if (existing) {
+    hiddenTabId = existing.id;
+    return hiddenTabId;
+  }
+
   const tab = await chrome.tabs.create({
     url: "about:blank",
     active: false,

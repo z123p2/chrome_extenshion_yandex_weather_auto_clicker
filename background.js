@@ -36,13 +36,17 @@ function scheduleNext(fallbackMinutes) {
   chrome.alarms.clear("autoClick");
   if (fallbackMinutes !== undefined) {
     chrome.alarms.create("autoClick", { delayInMinutes: fallbackMinutes });
-    log(`scheduleNext: retry in ${fallbackMinutes} min`);
+    const next = new Date(Date.now() + fallbackMinutes * 60000);
+    const nextStr = next.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+    log(`scheduleNext: retry at ${nextStr}, in ${fallbackMinutes} min`);
     return;
   }
   const randomExtra = Math.random() * (config.delayMax - config.delayMin) + config.delayMin;
   const totalMinutes = config.intervalMinutes + randomExtra / 60;
   chrome.alarms.create("autoClick", { delayInMinutes: totalMinutes });
-  log(`scheduleNext: next in ${totalMinutes.toFixed(1)} min`);
+  const next = new Date(Date.now() + totalMinutes * 60000);
+  const nextStr = next.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+  log(`scheduleNext: next at ${nextStr}, in ${totalMinutes.toFixed(1)} min`);
 }
 
 chrome.runtime.onStartup.addListener(() => {

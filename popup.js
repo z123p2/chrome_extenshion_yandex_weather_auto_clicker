@@ -3,9 +3,9 @@ const DEFAULT_CONFIG = {
   autoStart: false,
   autoOpenPage: true,
   targetUrl: "https://yandex.ru/pogoda/ru/maps/nowcast?lon=60.493&lat=10.2554&ll=60.493_10.2554&z=5",
-  intervalMinutes: 10,
-  delayMin: 30,
-  delayMax: 60,
+  intervalMinutes: 11,
+  delayMin: 3,
+  delayMax: 10,
 };
 
 const $ = (id) => document.getElementById(id);

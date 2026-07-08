@@ -11,10 +11,22 @@ const DEFAULT_CONFIG = {
 let config = { ...DEFAULT_CONFIG };
 let hiddenTabId = null;
 
+function log(msg) {
+  const ts = new Date().toLocaleTimeString("ru-RU");
+  console.log(`[${ts}] ${msg}`);
+  chrome.storage.local.get("logs", (data) => {
+    const logs = data.logs || [];
+    logs.push({ ts: Date.now(), msg });
+    if (logs.length > 50) logs.splice(0, logs.length - 50);
+    chrome.storage.local.set({ logs });
+  });
+}
+
 function loadConfig() {
   chrome.storage.sync.get(DEFAULT_CONFIG, (stored) => {
     config = { ...DEFAULT_CONFIG, ...stored };
     if (config.enabled) {
+      log("loadConfig: enabled, schedule next");
       scheduleNext();
     }
   });
@@ -24,11 +36,13 @@ function scheduleNext(fallbackMinutes) {
   chrome.alarms.clear("autoClick");
   if (fallbackMinutes !== undefined) {
     chrome.alarms.create("autoClick", { delayInMinutes: fallbackMinutes });
+    log(`scheduleNext: retry in ${fallbackMinutes} min`);
     return;
   }
   const randomExtra = Math.random() * (config.delayMax - config.delayMin) + config.delayMin;
   const totalMinutes = config.intervalMinutes + randomExtra / 60;
   chrome.alarms.create("autoClick", { delayInMinutes: totalMinutes });
+  log(`scheduleNext: next in ${totalMinutes.toFixed(1)} min`);
 }
 
 chrome.runtime.onStartup.addListener(() => {
@@ -50,8 +64,9 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === "autoClick") {
+    log("ALARM: autoClick fired");
     scheduleNext();
-    handleAutoClick().catch(() => {});
+    handleAutoClick().catch(() => log("handleAutoClick: unhandled rejection"));
   }
 });
 
@@ -59,8 +74,10 @@ async function ensureHiddenTab() {
   if (hiddenTabId) {
     try {
       await chrome.tabs.get(hiddenTabId);
+      log("ensureHiddenTab: reuse cached id " + hiddenTabId);
       return hiddenTabId;
     } catch {
+      log("ensureHiddenTab: cache invalid, drop");
       hiddenTabId = null;
     }
   }
@@ -69,9 +86,11 @@ async function ensureHiddenTab() {
   const existing = tabs.find(t => !t.active);
   if (existing) {
     hiddenTabId = existing.id;
+    log("ensureHiddenTab: found existing tab " + hiddenTabId);
     return hiddenTabId;
   }
 
+  log("ensureHiddenTab: create new pinned tab");
   const tab = await chrome.tabs.create({
     url: "about:blank",
     active: false,
@@ -82,47 +101,70 @@ async function ensureHiddenTab() {
 }
 
 async function handleAutoClick() {
+  log("handleAutoClick: start");
   const urlPattern = "https://yandex.ru/pogoda/*";
   let tabs = await chrome.tabs.query({ url: urlPattern });
+  log(`handleAutoClick: found ${tabs.length} existing tabs`);
   let clicked = false;
 
   if (tabs.length === 0 && config.autoOpenPage) {
     try {
       const tabId = await ensureHiddenTab();
-      if (!tabId) return;
+      if (!tabId) { log("handleAutoClick: no tabId, return"); return; }
 
+      log("handleAutoClick: navigate to target URL");
       await chrome.tabs.update(tabId, { url: config.targetUrl, active: false });
 
+      log("handleAutoClick: wait for load");
       try {
         await waitForTabLoad(tabId, 30000);
-      } catch {}
+        log("handleAutoClick: load complete");
+      } catch {
+        log("handleAutoClick: waitForTabLoad timeout");
+      }
       await delay(3000);
+      log("handleAutoClick: send click message");
       const response = await chrome.tabs.sendMessage(tabId, { action: "click" }).catch(() => null);
 
       if (response && response.success) {
+        log("handleAutoClick: click SUCCESS");
         await chrome.storage.local.set({ lastClickTime: Date.now() });
         clicked = true;
+      } else {
+        log("handleAutoClick: click FAILED (response=" + JSON.stringify(response) + ")");
       }
 
       await delay(500);
+      log("handleAutoClick: reset to about:blank");
       await chrome.tabs.update(tabId, { url: "about:blank", active: false });
-    } catch {}
+    } catch (e) {
+      log("handleAutoClick: error in autoOpen block: " + e.message);
+    }
   } else if (tabs.length > 0) {
+    log("handleAutoClick: trying existing tabs");
     for (const tab of tabs) {
       try {
         const response = await chrome.tabs.sendMessage(tab.id, { action: "click" }).catch(() => null);
         if (response && response.success) {
+          log("handleAutoClick: click SUCCESS on existing tab " + tab.id);
           await chrome.storage.local.set({ lastClickTime: Date.now() });
           clicked = true;
           break;
         }
-      } catch {}
+      } catch (e) {
+        log("handleAutoClick: error on tab " + tab.id + ": " + e.message);
+      }
     }
+    if (!clicked) log("handleAutoClick: no existing tab succeeded");
+  } else {
+    log("handleAutoClick: no tabs and autoOpenPage disabled");
   }
 
   if (clicked) {
+    log("handleAutoClick: schedule normal");
     scheduleNext();
   } else {
+    log("handleAutoClick: schedule retry 3min");
     scheduleNext(3);
   }
 }
@@ -173,6 +215,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         enabled: config.enabled,
         lastClickTime: data.lastClickTime || null,
       });
+    });
+    return true;
+  }
+  if (message.action === "getLogs") {
+    chrome.storage.local.get("logs", (data) => {
+      sendResponse(data.logs || []);
     });
     return true;
   }

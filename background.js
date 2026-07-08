@@ -25,10 +25,7 @@ function log(msg) {
 function loadConfig() {
   chrome.storage.sync.get(DEFAULT_CONFIG, (stored) => {
     config = { ...DEFAULT_CONFIG, ...stored };
-    if (config.enabled) {
-      log("loadConfig: enabled, schedule next");
-      scheduleNext();
-    }
+    log("loadConfig: loaded, enabled=" + config.enabled);
   });
 }
 
@@ -63,7 +60,13 @@ chrome.runtime.onStartup.addListener(() => {
 });
 
 chrome.runtime.onInstalled.addListener(() => {
-  loadConfig();
+  chrome.storage.sync.get(DEFAULT_CONFIG, (stored) => {
+    config = { ...DEFAULT_CONFIG, ...stored };
+    log("onInstalled: loaded, enabled=" + config.enabled);
+    if (config.enabled) {
+      scheduleNext();
+    }
+  });
 });
 
 chrome.alarms.onAlarm.addListener((alarm) => {
@@ -214,10 +217,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
   if (message.action === "getStatus") {
-    chrome.storage.local.get("lastClickTime", (data) => {
-      sendResponse({
-        enabled: config.enabled,
-        lastClickTime: data.lastClickTime || null,
+    chrome.storage.local.get("lastClickTime", (lcData) => {
+      chrome.storage.sync.get(DEFAULT_CONFIG, (stored) => {
+        sendResponse({
+          enabled: stored.enabled || false,
+          lastClickTime: lcData.lastClickTime || null,
+        });
       });
     });
     return true;
@@ -233,5 +238,3 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse({ success: true });
   }
 });
-
-loadConfig();

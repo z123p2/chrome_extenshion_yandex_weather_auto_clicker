@@ -150,28 +150,49 @@
       line-height: 1.4;
     }
 
-    @media (prefers-color-scheme: dark) {
-      body { color: #ddd; background: #1e1e1e; }
-      .toggle-row { background: #2a2a2a; }
-      .slider { background: #555; }
-      .slider:before { background: #ccc; }
-      .field-group input[type="number"],
-      .field-group input[type="text"] {
-        background: #2a2a2a; border-color: #444; color: #ddd;
-      }
-      .field-group .unit { color: #888; }
-      .checkbox-row label { color: #ccc; }
-      .divider { border-top-color: #333; }
-      .status-row { color: #999; }
-      .status-dot.inactive { background: #555; }
-      .btn-secondary { background: #333; color: #bbb; }
-      .btn-secondary:hover { background: #444; }
-      .log-area { background: #252525; border-color: #333; color: #bbb; }
-      .log-time { color: #666; }
-      .log-error { color: #e55; }
-      .note { color: #666; }
-    }
+    .dark { color: #ddd; background: #1e1e1e; }
+    .dark .toggle-row { background: #2a2a2a; }
+    .dark .slider { background: #555; }
+    .dark .slider:before { background: #ccc; }
+    .dark .field-group input[type="number"],
+    .dark .field-group input[type="text"] { background: #2a2a2a; border-color: #444; color: #ddd; }
+    .dark .field-group .unit { color: #888; }
+    .dark .checkbox-row label { color: #ccc; }
+    .dark .divider { border-top-color: #333; }
+    .dark .status-row { color: #999; }
+    .dark .status-dot.inactive { background: #555; }
+    .dark .btn-secondary { background: #333; color: #bbb; }
+    .dark .btn-secondary:hover { background: #444; }
+    .dark .log-area { background: #252525; border-color: #333; color: #bbb; }
+    .dark .log-time { color: #666; }
+    .dark .log-error { color: #e55; }
+    .dark .note { color: #666; }
     .row { margin-top: 8px; }
+    .theme-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      padding: 6px 0;
+    }
+    .theme-row label { font-size: 12px; color: #888; white-space: nowrap; }
+    .theme-btn {
+      flex: 1;
+      padding: 4px 0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background: #fff;
+      color: #555;
+      font-size: 11px;
+      cursor: pointer;
+      transition: .15s;
+      text-align: center;
+    }
+    .theme-btn:hover { background: #f5f5f5; }
+    .theme-btn.active { background: #4a90d9; color: #fff; border-color: #4a90d9; }
+    .dark .theme-btn { background: #2a2a2a; border-color: #444; color: #999; }
+    .dark .theme-btn:hover { background: #333; }
+    .dark .theme-btn.active { background: #4a90d9; color: #fff; border-color: #4a90d9; }
   </style>
 </head>
 <body>
@@ -235,6 +256,13 @@
       <button id="copyLogsBtn" class="btn btn-secondary" style="flex:1">📋 Копировать</button>
       <button id="clearLogsBtn" class="btn btn-secondary" style="flex:1">🗑 Очистить</button>
     </div>
+  </div>
+
+  <div class="theme-row">
+    <label>Тема:</label>
+    <button class="theme-btn" data-theme="system">Системная</button>
+    <button class="theme-btn" data-theme="dark">Тёмная</button>
+    <button class="theme-btn" data-theme="light">Светлая</button>
   </div>
 
   <div class="note">

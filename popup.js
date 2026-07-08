@@ -10,6 +10,37 @@ const DEFAULT_CONFIG = {
 
 const $ = (id) => document.getElementById(id);
 
+function setTheme(theme) {
+  const body = document.body;
+  body.classList.remove("dark");
+  if (theme === "dark") {
+    body.classList.add("dark");
+  } else if (theme === "system") {
+    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      body.classList.add("dark");
+    }
+  }
+  document.querySelectorAll(".theme-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.theme === theme);
+  });
+  chrome.storage.sync.set({ theme });
+}
+
+chrome.storage.sync.get("theme", ({ theme }) => {
+  setTheme(theme || "system");
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+    chrome.storage.sync.get("theme", ({ theme: t }) => {
+      if (t === "system") {
+        document.body.classList.toggle("dark", e.matches);
+      }
+    });
+  });
+});
+
+document.querySelectorAll(".theme-btn").forEach(btn => {
+  btn.addEventListener("click", () => setTheme(btn.dataset.theme));
+});
+
 function readForm() {
   return {
     enabled: $("enabled").checked,

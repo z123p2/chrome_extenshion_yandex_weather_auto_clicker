@@ -11,18 +11,36 @@ const DEFAULT_CONFIG = {
 
 let config = { ...DEFAULT_CONFIG };
 let hiddenTabId = null;
+let logBuffer = [];
+let flushTimer = null;
 
 function log(msg) {
   if (!config.loggingEnabled) return;
   const ts = new Date().toLocaleTimeString("ru-RU");
   console.log(`[${ts}] ${msg}`);
-  chrome.storage.local.get("logs", (data) => {
-    const logs = data.logs || [];
-    logs.push({ ts: Date.now(), msg });
-    if (logs.length > 50) logs.splice(0, logs.length - 50);
-    chrome.storage.local.set({ logs });
-  });
+  logBuffer.push({ ts: Date.now(), msg });
 }
+
+const LOG_RETENTION_MS = 8 * 3600 * 1000;
+
+async function flushLogBuffer() {
+  if (!flushTimer) return;
+  if (logBuffer.length === 0) return;
+  const batch = logBuffer.splice(0, logBuffer.length);
+  const data = await chrome.storage.local.get("logs");
+  let logs = data.logs || [];
+  const cutoff = Date.now() - LOG_RETENTION_MS;
+  logs = logs.filter(e => e.ts > cutoff);
+  logs.push(...batch);
+  await chrome.storage.local.set({ logs });
+}
+
+function startLogFlusher() {
+  if (flushTimer) return;
+  flushTimer = setInterval(flushLogBuffer, 5000);
+}
+
+startLogFlusher();
 
 function loadConfig() {
   chrome.storage.sync.get(DEFAULT_CONFIG, (stored) => {
@@ -230,12 +248,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
   if (message.action === "getLogs") {
-    chrome.storage.local.get("logs", (data) => {
-      sendResponse(data.logs || []);
+    flushLogBuffer().then(() => {
+      chrome.storage.local.get("logs", (data) => {
+        sendResponse(data.logs || []);
+      });
     });
     return true;
   }
   if (message.action === "clearLogs") {
+    logBuffer = [];
     chrome.storage.local.set({ logs: [] });
     sendResponse({ success: true });
   }

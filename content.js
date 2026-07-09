@@ -13,7 +13,16 @@ function waitForButton(sendResponse) {
     const button = findButton();
     if (button) {
       button.click();
-      sendResponse({ success: true });
+      setTimeout(() => {
+        const hasDisabled = button.hasAttribute("disabled");
+        const container = button.closest('[class*="AppReportForm_container__"]');
+        const isHidden = container?.classList.contains("AppReportForm_container_invisible__NYqPk");
+        if (hasDisabled || isHidden) {
+          sendResponse({ success: true });
+        } else {
+          sendResponse({ success: false });
+        }
+      }, 5000);
       return;
     }
     attempts++;
